@@ -7,57 +7,39 @@ namespace metautils::details
 
 template<auto ... I>
 struct constexpr_sequence
-{
-};
+{};
 
 // returns the last element
 template<auto Head, auto ... I>
 struct Tail
 {
-	constexpr auto operator()() const
-
-	noexcept
+	constexpr auto operator()() const noexcept
 	{
 		if constexpr(sizeof ... (I) == 0)
-		return Head;
+			return Head;
 
 		else
-		return Tail<I...>{}();
+			return Tail<I...>{}();
 	}
 };
 
 
 template<auto condition, auto modifier, auto ... I>
-constexpr auto make_constexpr_sequence_impl()
-
-noexcept
+constexpr auto make_constexpr_sequence_impl() noexcept
 {
-constexpr auto tail = Tail<I...>{}();
+	constexpr auto tail = Tail<I...>{}();
 
-if
+	if constexpr (condition(modifier(tail)))
+		return make_constexpr_sequence_impl<condition, modifier, I ..., modifier(tail)>();
 
-constexpr (condition(modifier(tail)))
-
-return
-
-make_constexpr_sequence_impl<condition, modifier, I ..., modifier(tail)>();
-
-else
-return constexpr_sequence<I ...>
-{
-};
+	else return constexpr_sequence<I ...>{};
 }
 
 
 template<auto I, auto condition, auto modifier>
-constexpr auto make_constexpr_sequence()
-
-noexcept
+constexpr auto make_constexpr_sequence() noexcept
 {
-return
-
-make_constexpr_sequence_impl<condition, modifier, I>();
-
+	return make_constexpr_sequence_impl<condition, modifier, I>();
 }
 
 
@@ -135,7 +117,7 @@ return details::constexpr_for_impl<decltype(loop_body), I, condition, modifier>{
 };
 
 template <auto start, auto end, auto increment = [](decltype(start) i){ return ++i; }>
-constexpr auto constexpr_for(auto loop_body)
+constexpr auto constexpr_for(auto loop_body) noexcept
 {
 	if constexpr (start <= end)
 	{
